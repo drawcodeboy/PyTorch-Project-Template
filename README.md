@@ -1,5 +1,6 @@
 # PyTorch Project Template
-* 본 Repository는 PyTorch를 통해 프로젝트를 수행할 때 기반이 되는 코드베이스 템플릿입니다.
+* This repository is a codebase template for projects using PyTorch.
+* It includes an example project that performs multi-class classification on the MNIST dataset using ConvNet and ConvNet2(with residual connections).
 
 # Installation & Environment Setup
 ```
