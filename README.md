@@ -1,18 +1,22 @@
 # PyTorch Project Template
 * 본 Repository는 PyTorch를 통해 프로젝트를 수행할 때 기반이 되는 코드베이스 템플릿입니다.
 
-# Installation
+# Installation & Environment Setup
 ```
 # Docker Container Setup
 docker pull ubuntu:22.04
-docker run -itd --gpus=all --shm-size=16G --name=<container_name> <image_name>
+docker run -itd --gpus=all --shm-size=16G --name=<container_name> ubuntu:22.04
 
 # Ubuntu
 apt-get update
 apt-get install sudo
 sudo apt-get install python3
+sudo apt-get git
+git clone https://github.com/drawcodeboy/PyTorch-Project-Template.git
+cd <project_folder_name>
 python3 -m venv .venv
 source .venv/bin/activate
+pip install -r requirements.txt
 ```
 # Train & Test
 ```
