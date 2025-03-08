@@ -1,0 +1,22 @@
+expr: "Test ConvNet"
+
+device: cuda:0
+parallel: False
+
+data:
+  dataset: MNIST
+  root: data/
+  download: True
+  mode: test
+
+model:
+  name: ConvNet
+  in_channels: 1
+  layers: [8, 16, 32]
+  class_num: 10
+
+hyperparameters:
+  batch_size: 32
+
+save_dir: saved
+weights_file_name: convnet_mnist.epochs_100.pth

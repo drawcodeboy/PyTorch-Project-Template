@@ -1,0 +1,16 @@
+# Virtual Environment
+.venv/
+
+# Cache
+**/__pycache__/**
+
+# VScode
+.vscode
+
+# Data
+data/*
+!data/temp.txt
+
+# Weights File
+saved/*
+!saved/temp.txt

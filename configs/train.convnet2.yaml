@@ -1,0 +1,26 @@
+expr: "Train ConvNet2"
+
+device: cuda:0
+parallel: False
+
+data:
+  dataset: MNIST
+  root: data/
+  download: True
+  mode: train
+
+model:
+  name: ConvNet2
+  in_channels: 1
+  layers: [8, 16, 32]
+  class_num: 10
+
+hyperparameters:
+  batch_size: 32
+  optim: AdamW
+  lr: 0.0001
+  loss_fn: cross-entropy
+  epochs: 100
+
+save_dir: saved
+save_name: convnet2_mnist
