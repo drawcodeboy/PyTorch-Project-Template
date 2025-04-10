@@ -30,7 +30,7 @@ def main(cfg):
 
     # Load Dataset
     data_cfg = cfg['data']
-    train_ds = load_dataset(**data_cfg)
+    train_ds = load_dataset(data_cfg)
     train_dl = torch.utils.data.DataLoader(train_ds,
                                            shuffle=True,
                                            batch_size=hp_cfg['batch_size'],
@@ -40,7 +40,7 @@ def main(cfg):
     # Load Model
     model_cfg = cfg['model']
     print(model_cfg['name'])
-    model = load_model(**model_cfg).to(device)
+    model = load_model(model_cfg).to(device)
     if cfg['parallel'] == True:
         model = nn.DataParallel(model)
     
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser('Training', parents=[add_args_parser()])
     args = parser.parse_args()
 
-    with open(f'configs/train.{args.config}.yaml') as f:
+    with open(f'configs/train/{args.config}.yaml') as f:
         cfg = yaml.full_load(f)
     
     main(cfg)
