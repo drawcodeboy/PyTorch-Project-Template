@@ -38,3 +38,9 @@ class MNIST_Dataset():
         label = torch.tensor(label, dtype=torch.int64)
         
         return image, label
+    
+    @classmethod
+    def from_config(cls, cfg):
+        return cls(root=cfg['root'],
+                   download=cfg['download'],
+                   mode=cfg['mode'])

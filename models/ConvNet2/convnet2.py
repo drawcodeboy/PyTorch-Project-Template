@@ -34,3 +34,9 @@ class ConvNet2(nn.Module):
         x = self.li(x)
         
         return x
+    
+    @classmethod
+    def from_config(cls, cfg):
+        return cls(in_channels=cfg['in_channels'],
+                   layers=cfg['layers'],
+                   class_num=cfg['class_num'])
