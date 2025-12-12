@@ -18,5 +18,6 @@ model:
 hyperparameters:
   batch_size: 32
 
-save_dir: saved
-weights_file_name: convnet2_mnist.epochs_100.pth
+save:
+  weights_path: saved/weights
+  weights_filename: convnet2_mnist.epochs_100.pth

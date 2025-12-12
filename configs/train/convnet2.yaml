@@ -22,5 +22,7 @@ hyperparameters:
   loss_fn: cross-entropy
   epochs: 100
 
-save_dir: saved
-save_name: convnet2_mnist
+save:
+  name: convnet2_mnist
+  weights_path: saved/weights
+  loss_path: saved/loss

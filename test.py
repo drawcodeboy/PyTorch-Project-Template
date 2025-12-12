@@ -35,9 +35,10 @@ def main(cfg):
     print(f"Load Dataset {data_cfg['dataset']}")
     
     # Load Model
+    save_cfg = cfg['save']
     model_cfg = cfg['model']
     model = load_model(model_cfg).to(device)
-    ckpt = torch.load(os.path.join(cfg['save_dir'], cfg['weights_file_name']),
+    ckpt = torch.load(os.path.join(save_cfg['weights_path'], save_cfg['weights_filename']),
                       map_location=device, weights_only=False)
     model.load_state_dict(ckpt['model'])
     
