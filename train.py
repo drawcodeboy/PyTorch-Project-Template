@@ -16,20 +16,21 @@ def add_args_parser():
 
     return parser
 
-def load_wandb():
+def load_wandb(cfg):
     wandb.init(
         config=cfg,
         project='Torch Template (MNIST Classification)',
         group=f"train_{cfg['model']['name']}_{cfg['data']['train']['dataset']}"
     )
 
+    wandb.define_metric("epoch")
     wandb.define_metric("train_loss", step_metric="epoch")
     wandb.define_metric("val_loss", step_metric="epoch")
 
 def main(cfg, args):
     # WandB Setting
     if args.use_wandb: 
-        load_wandb()
+        load_wandb(cfg)
         
     # Device Setting
     device = None
@@ -118,7 +119,7 @@ def main(cfg, args):
 
         # loss -> WandB
         if args.use_wandb:
-            wandb.log({"train_loss": train_loss, "val_loss": val_loss}, step=current_epoch)
+            wandb.log({"epoch": current_epoch, "train_loss": train_loss, "val_loss": val_loss})
 
         save_ckpt(ckpt_name="last",
                   model=model,

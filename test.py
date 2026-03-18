@@ -6,16 +6,28 @@ import time, sys, os, yaml, json
 from utils import evaluate
 from models import load_model
 from datasets import load_dataset
+import wandb
 
 def add_args_parser():
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('--ckpt_path', type=str)
+    parser.add_argument('--use_wandb', action='store_true')
     
     return parser
+
+def load_wandb(cfg):
+    wandb.init(
+        config=cfg,
+        project='Torch Template (MNIST Classification)',
+        group=f"test_{cfg['model']['name']}_{cfg['data']['test']['dataset']}"
+    )
 
 def main(args):
     ckpt = torch.load(args.ckpt_path, weights_only=False)
     cfg = ckpt['cfg']
+
+    if args.use_wandb: 
+        load_wandb(cfg)
 
     # Device Setting
     device = None
@@ -52,6 +64,10 @@ def main(args):
 
     with open(os.path.join(os.path.dirname(args.ckpt_path), "result.json"), 'w') as f:
         json.dump(result_dict, f, indent=2)
+    
+    if args.use_wandb:
+        wandb.log(result_dict)
+        wandb.finish()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Test', parents=[add_args_parser()])
