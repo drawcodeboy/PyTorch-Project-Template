@@ -4,25 +4,6 @@
 
 # Installation & Environment Setup
 ```
-# Docker Container Setup
-docker pull ubuntu:22.04
-docker run -itd --gpus=all --shm-size=16G --name=<container_name> ubuntu:22.04
-
-# Ubuntu
-apt-get update
-apt-get install sudo
-sudo apt-get install python3
-sudo apt-get install python3-venv
-sudo apt-get git
-
-git clone https://github.com/drawcodeboy/PyTorch-Project-Template.git
-cd <project_folder_name>
-
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-
-# Conda (Simple setup (25.12.12))
 conda create -n template python=3.12
 conda activate template
 pip install -r requirements.txt
@@ -30,7 +11,7 @@ pip install -r requirements.txt
 # Train & Test
 ```
 # Train
-python train.py --config=convnet
+bash scripts/train_convnet.sh
 python train.py --config=convnet2
 
 # Test
