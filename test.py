@@ -1,7 +1,7 @@
 import torch
 
 import argparse
-import time, sys, os, yaml
+import time, sys, os, yaml, json
 
 from utils import evaluate
 from models import load_model
@@ -14,7 +14,7 @@ def add_args_parser():
     return parser
 
 def main(args):
-    ckpt = torch.load(args.ckpt_path, map_location='cpu', weights_only=False)
+    ckpt = torch.load(args.ckpt_path, weights_only=False)
     cfg = ckpt['cfg']
 
     # Device Setting
@@ -47,6 +47,9 @@ def main(args):
     
     for key, value in result_dict.items():
         print(f"{key}: {value:.4f}")
+
+    with open(os.path.join(os.path.dirname(args.ckpt_path), "result.json"), 'w') as f:
+        json.dump(result_dict, f, indent=2)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Test', parents=[add_args_parser()])
