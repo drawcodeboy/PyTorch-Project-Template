@@ -1,7 +1,6 @@
 # ⚡ PyTorch Project Template
 * This repository is a codebase template for projects using PyTorch.
 * It includes an example project that performs multi-class classification on the MNIST dataset using ConvNet and ConvNet2(with residual connections).
-* It provides WandB.
 
 # 🚀 Version 2.0.0 Notes
 - [x] Shell script-based execution
@@ -14,6 +13,42 @@
 
 ### ✅ Planned for future release
 - [ ] Resume training from intermediate checkpoints
+
+# 📂 Structure
+```
+├── README.md
+├── configs
+│   ├── convnet2_mnist_cls.yaml
+│   └── convnet_mnist_cls.yaml
+├── data
+│   └── MNIST
+├── datasets
+│   ├── __init__.py
+│   └── mnist_dataset.py
+├── logs
+│   ├── convnet2_mnist_cls
+│   └── convnet_mnist_cls
+├── models
+│   ├── ConvNet
+│   ├── ConvNet2
+│   └── __init__.py
+├── requirements.txt
+├── scripts
+│   ├── test_convnet2_mnist_cls.sh
+│   ├── test_convnet_mnist_cls.sh
+│   ├── train_convnet2_mnist_cls.sh
+│   └── train_convnet_mnist_cls.sh
+├── subtasks
+│   ├── 01_model_params
+│   └── README.md
+├── test.py
+├── train.py
+└── utils
+    ├── __init__.py
+    ├── engine.py
+    ├── metrics.py
+    └── save_ckpt.py
+```
 
 # 🔥 Installation, Environment Setup
 ```bash
