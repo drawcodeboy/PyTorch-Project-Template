@@ -17,3 +17,6 @@ saved/*
 
 # wandb
 wandb/*
+
+# Scripts (individual files WandB doesn't track)
+scripts_/*

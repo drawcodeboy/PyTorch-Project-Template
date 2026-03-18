@@ -11,10 +11,11 @@
 - [x] Checkpoint-based saving (<code>.ckpt</code>)
 - [x] Save test results as JSON
 - [x] Added validation function (<code>engine/validate.py</code>)
+
 - [ ] Resume training from intermediate checkpoints
+- [ ] 
 
-
-# 🔥 Installation & Environment Setup
+# 🔥 Installation, Environment Setup
 ```bash
 git clone https://github.com/drawcodeboy/PyTorch-Project-Template.git
 conda create -n template python=3.12
@@ -24,10 +25,10 @@ pip install -r requirements.txt
 # 🔥 Execution
 ```bash
 # Train
-bash scripts/train_convnet.sh
-python train.py --config=convnet2
+bash scripts/train_convnet_mnist_cls.sh
+bash scripts/train_convnet2_mnist_cls.sh
 
 # Test
-python test.py --config=convnet
-python test.py --config=convnet2
+bash scripts/test_convnet_mnist_cls.sh
+bash scripts/test_convnet2_mnist_cls.sh
 ```
