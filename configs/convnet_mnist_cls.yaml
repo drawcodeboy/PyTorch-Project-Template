@@ -12,6 +12,11 @@ data:
     root: data/
     download: True
     mode: val
+  test:
+    dataset: MNIST
+    root: data/
+    download: True
+    mode: test
 
 model:
   name: ConvNet
@@ -26,7 +31,4 @@ hyperparameters:
   loss_fn: cross-entropy
   epochs: 10
 
-save:
-  name: convnet_mnist
-  weights_path: saved/weights
-  loss_path: saved/loss
+ckpt_path: logs/convnet_mnist_cls

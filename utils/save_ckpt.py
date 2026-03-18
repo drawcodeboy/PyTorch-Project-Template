@@ -2,22 +2,25 @@ import torch
 import numpy as np
 import os
 
-def save_model_ckpt(model, model_name, current_epoch, save_dir):
-    ckpt = {}
-    ckpt['model'] = model.state_dict()
-    ckpt['epochs'] = current_epoch
-    
-    save_name = f"{model_name}.epochs_{current_epoch:03d}.pth"
-    
+def save_ckpt(ckpt_name, 
+              model, 
+              current_epoch, 
+              best_metric, 
+              optimizer, 
+              scheduler, 
+              cfg, 
+              ckpt_path):
+    ckpt = {
+        'model': model.state_dict(),
+        'optimizer': optimizer.state_dict(),
+        'scheduler': scheduler.state_dict(),
+        'epoch': current_epoch,
+        'best_metric': best_metric,
+        'cfg': cfg
+    }
+
     try:
-        torch.save(ckpt, os.path.join(save_dir, save_name))
-        print(f"Save Model @epoch: {current_epoch}")
+        torch.save(ckpt, os.path.join(ckpt_path, f"{ckpt_name}.ckpt"))
+        print(f"Checkpoint {ckpt_name}.ckpt saved successfully.")
     except:
-        print(f"Can\'t Save Model @epoch: {current_epoch}")
-        
-def save_loss_ckpt(model_name, train_loss, save_dir, logger):
-    try:
-        np.save(os.path.join(save_dir, f'train_loss_{model_name}.npy'), np.array(train_loss))
-        print('Save Train Loss')
-    except:
-        print('Can\'t Save Train Loss') 
+        print(f"Can\'t Save Checkpoint {ckpt_name}.ckpt")

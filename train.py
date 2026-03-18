@@ -1,7 +1,7 @@
 from datasets import load_dataset
 from models import load_model
 
-from utils import train_one_epoch, save_model_ckpt, save_loss_ckpt
+from utils import train_one_epoch, validate, save_ckpt
 
 import torch
 from torch import nn, optim
@@ -15,8 +15,6 @@ def add_args_parser():
     return parser
         
 def main(cfg):
-    print(f"=====================[{cfg['expr']}]=====================")
-
     # Device Setting
     device = None
     if cfg['device'] != 'cpu' and torch.cuda.is_available():
@@ -30,12 +28,19 @@ def main(cfg):
 
     # Load Dataset
     data_cfg = cfg['data']
-    train_ds = load_dataset(data_cfg)
+    train_ds = load_dataset(data_cfg['train'])
     train_dl = torch.utils.data.DataLoader(train_ds,
                                            shuffle=True,
                                            batch_size=hp_cfg['batch_size'],
                                            drop_last=True)
-    print(f"Load Dataset {data_cfg['dataset']}")
+
+    val_ds = load_dataset(data_cfg['val'])
+    val_dl = torch.utils.data.DataLoader(val_ds,
+                                         shuffle=False,
+                                         batch_size=hp_cfg['batch_size'],
+                                         drop_last=False)
+    print(f"Load Train dataset {data_cfg['train']['dataset']}")
+    print(f"Load Validation dataset {data_cfg['val']['dataset']}")
 
     # Load Model
     model_cfg = cfg['model']
@@ -68,7 +73,7 @@ def main(cfg):
     total_train_loss = []
     total_start_time = int(time.time())
 
-    save_cfg = cfg['save']
+    ckpt_path = str(cfg['ckpt_path'])
     
     min_loss = 1e4
     
@@ -82,12 +87,30 @@ def main(cfg):
         elapsed_time = int(time.time() - start_time)
         print(f"Train Time: {elapsed_time//60:02d}m {elapsed_time%60:02d}s")
 
-        if train_loss < min_loss:
-            min_loss = train_loss
-            save_model_ckpt(model, save_cfg['name'], current_epoch, save_cfg['weights_path'])
+        # Validation
+        val_loss = validate(model, val_dl, loss_fn, device)
+
+        if val_loss < min_loss:
+            min_loss = val_loss
+            save_ckpt(ckpt_name="best",
+                      model=model,
+                      current_epoch=current_epoch,
+                      best_metric=min_loss,
+                      optimizer=optimizer,
+                      scheduler=scheduler,
+                      cfg=cfg,
+                      ckpt_path=ckpt_path)
 
         total_train_loss.append(train_loss)
-        save_loss_ckpt(save_cfg['name'], total_train_loss, save_cfg['loss_path'])
+        # loss -> WandB
+        save_ckpt(ckpt_name="last",
+                  model=model,
+                  current_epoch=current_epoch,
+                  best_metric=min_loss,
+                  optimizer=optimizer,
+                  scheduler=scheduler,
+                  cfg=cfg,
+                  ckpt_path=ckpt_path)
 
     total_elapsed_time = int(time.time()) - total_start_time
     print(f"<Total Train Time: {total_elapsed_time//60:02d}m {total_elapsed_time%60:02d}s>")
@@ -96,7 +119,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser('Training', parents=[add_args_parser()])
     args = parser.parse_args()
 
-    with open(f'configs/train/{args.config}.yaml') as f:
+    with open(f'configs/{args.config}.yaml') as f:
         cfg = yaml.full_load(f)
     
     main(cfg)

@@ -34,6 +34,27 @@ def train_one_epoch(model, dataloader, loss_fn, optimizer, scheduler, device):
     return sum(total_loss)/len(total_loss)
 
 @torch.no_grad()
+def validate(model, dataloader, loss_fn, device):
+    model.eval()
+    total_loss = []
+    
+    for batch_idx, (x, target) in enumerate(dataloader, start=1):
+        x = x.to(device)
+        target = target.to(device)
+        
+        logits = model(x)
+        loss = loss_fn(logits, target)
+        
+        total_loss.append(loss.item())
+        
+        if batch_idx % PER_STEPS == 0:
+            print(f"Validation steps [{batch_idx}/{len(dataloader)}]")
+    
+    print(f"Validation Loss: {sum(total_loss)/len(total_loss):.6f}")
+    
+    return sum(total_loss)/len(total_loss)
+
+@torch.no_grad()
 def evaluate(model, dataloader, device):
     model.eval()
     
@@ -55,6 +76,6 @@ def evaluate(model, dataloader, device):
             print(f"Evaluate steps [{batch_idx}/{len(dataloader)}]")
     print()
     
-    result = get_metrics(np.array(total_outputs), np.array(total_targets))
+    result_dict = get_metrics(np.array(total_outputs), np.array(total_targets))
     
-    return result
+    return result_dict

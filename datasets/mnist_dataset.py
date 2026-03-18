@@ -9,7 +9,7 @@ class MNIST_Dataset():
                  download=True, # download if there is no data, else pass
                  mode='train'): 
         
-        if mode not in ['train', 'test']:
+        if mode not in ['train', 'val', 'test']:
             raise AssertionError(f"Mode-related Error: [{mode}] is not supported.")
         
         self.data = MNIST(root=root,
@@ -17,14 +17,17 @@ class MNIST_Dataset():
         
         self.data=list(self.data)
         
-        train_size = 5000
+        train_size = 1000
         test_size = 500
-        
+        val_size = 500
+
         if mode == 'train':
             self.data = self.data[:train_size]
+        elif mode == 'val':
+            self.data = self.data[train_size:train_size+val_size]
         elif mode == 'test':
-            self.data = self.data[train_size:train_size+test_size]
-        
+            self.data = self.data[train_size+val_size:train_size+val_size+test_size]
+
     def __len__(self):
         return len(self.data)
     

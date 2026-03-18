@@ -6,12 +6,13 @@ source ~/anaconda3/etc/profile.d/conda.sh
 conda activate template
 
 cd ~/torch_template
-mkdir -p ./logs/convnet
+LOG_DIR=./logs/convnet_mnist_cls
+mkdir -p $LOG_DIR
 
-OUT=./logs/convnet/$(date +%Y%m%d-%H%M%S).out
-ERR=./logs/convnet/$(date +%Y%m%d-%H%M%S).err
+OUT=$LOG_DIR/$(date +%Y%m%d-%H%M%S).out
+ERR=$LOG_DIR/$(date +%Y%m%d-%H%M%S).err
 exec 1> "$OUT"
 exec 2> "$ERR"
 
 export PYTHON_UNBUFFERED=1
-python -u train.py --config=convnet
+python -u train.py --config=convnet_mnist_cls

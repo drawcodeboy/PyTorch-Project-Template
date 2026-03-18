@@ -9,13 +9,14 @@ from datasets import load_dataset
 
 def add_args_parser():
     parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument('--config', type=str)
+    parser.add_argument('--ckpt_path', type=str)
     
     return parser
 
-def main(cfg):
-    print(f"=====================[{cfg['expr']}]=====================")
-    
+def main(args):
+    ckpt = torch.load(args.ckpt_path, map_location='cpu', weights_only=False)
+    cfg = ckpt['cfg']
+
     # Device Setting
     device = None
     if cfg['device'] != 'cpu' and torch.cuda.is_available():
@@ -28,33 +29,27 @@ def main(cfg):
     hp_cfg = cfg['hyperparameters']
     
     # Load Dataset
-    data_cfg = cfg['data']
+    data_cfg = cfg['data']['test']
     test_ds = load_dataset(data_cfg)
     test_dl = torch.utils.data.DataLoader(test_ds,
                                           batch_size=hp_cfg['batch_size'])
     print(f"Load Dataset {data_cfg['dataset']}")
     
     # Load Model
-    save_cfg = cfg['save']
     model_cfg = cfg['model']
     model = load_model(model_cfg).to(device)
-    ckpt = torch.load(os.path.join(save_cfg['weights_path'], save_cfg['weights_filename']),
-                      map_location=device, weights_only=False)
     model.load_state_dict(ckpt['model'])
     
     start_time = int(time.time())
-    result = evaluate(model, test_dl, device)
+    result_dict = evaluate(model, test_dl, device)
     test_time = int(time.time() - start_time)
     print(f"Test Time: {test_time//60:02d}m {test_time%60:02d}s")
     
-    for key, value in result.items():
+    for key, value in result_dict.items():
         print(f"{key}: {value:.4f}")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Test', parents=[add_args_parser()])
     args = parser.parse_args()
 
-    with open(f'configs/test/{args.config}.yaml') as f:
-        cfg = yaml.full_load(f)
-    
-    main(cfg)
+    main(args)
