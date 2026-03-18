@@ -5,6 +5,8 @@ import numpy as np
 
 from .metrics import get_metrics
 
+PER_STEPS = 10
+
 def train_one_epoch(model, dataloader, loss_fn, optimizer, scheduler, device):
     model.train()
     total_loss = []
@@ -23,9 +25,8 @@ def train_one_epoch(model, dataloader, loss_fn, optimizer, scheduler, device):
         loss.backward()
         optimizer.step()
         
-        # Only stream (not log, because logging don't support the carriage return.)
-        # print(f"\rTraining: {100*batch_idx/len(dataloader):.2f}%, Loss: {sum(total_loss)/len(total_loss):.6f}, LR: {scheduler.get_last_lr()[0]:.6f}", end="")
-    print()
+        if batch_idx % PER_STEPS == 0:
+            print(f"Training steps [{batch_idx}/{len(dataloader)}]: Loss: {sum(total_loss)/len(total_loss):.6f}, LR: {scheduler.get_last_lr()[0]:.6f}")
     
     scheduler.step(sum(total_loss)/len(total_loss))
     print(f"Loss: {sum(total_loss)/len(total_loss):.6f}, LR: {scheduler.get_last_lr()[0]:.6f}")
@@ -50,8 +51,8 @@ def evaluate(model, dataloader, device):
         total_outputs.extend(out.tolist())
         total_targets.extend(target.tolist())
         
-        # Only stream (not log, because logging don't support the carriage return.)
-        print(f"\rEvaluate: {100*batch_idx/len(dataloader):.2f}%", end="")
+        if batch_idx % PER_STEPS == 0:
+            print(f"Evaluate steps [{batch_idx}/{len(dataloader)}]")
     print()
     
     result = get_metrics(np.array(total_outputs), np.array(total_targets))
