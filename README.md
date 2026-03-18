@@ -12,8 +12,8 @@
 - [x] Save test results as JSON
 - [x] Added validation function (<code>engine/validate.py</code>)
 
+### ✅ Planned for future release
 - [ ] Resume training from intermediate checkpoints
-- [ ] 
 
 # 🔥 Installation, Environment Setup
 ```bash
