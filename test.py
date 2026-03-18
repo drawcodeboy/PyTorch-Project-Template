@@ -39,6 +39,8 @@ def main(args):
     model_cfg = cfg['model']
     model = load_model(model_cfg).to(device)
     model.load_state_dict(ckpt['model'])
+    print(f"Load Model {model_cfg['name']}")
+    print(f"It trained epochs: {ckpt['epoch']}")
     
     start_time = int(time.time())
     result_dict = evaluate(model, test_dl, device)

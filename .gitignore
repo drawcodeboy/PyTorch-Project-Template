@@ -14,3 +14,6 @@ data/*
 # Weights File
 saved/*
 !saved/temp.txt
+
+# wandb
+wandb/*

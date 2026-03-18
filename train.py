@@ -7,14 +7,30 @@ import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
 import argparse, time, os, sys, yaml
+import wandb
 
 def add_args_parser():
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('--config', type=str)
+    parser.add_argument('--use_wandb', action='store_true')
 
     return parser
+
+def load_wandb():
+    wandb.init(
+        config=cfg,
+        project='Torch Template (MNIST Classification)',
+        group=f"train_{cfg['model']['name']}_{cfg['data']['train']['dataset']}"
+    )
+
+    wandb.define_metric("train_loss", step_metric="epoch")
+    wandb.define_metric("val_loss", step_metric="epoch")
+
+def main(cfg, args):
+    # WandB Setting
+    if args.use_wandb: 
+        load_wandb()
         
-def main(cfg):
     # Device Setting
     device = None
     if cfg['device'] != 'cpu' and torch.cuda.is_available():
@@ -70,7 +86,6 @@ def main(cfg):
                                                      min_lr=1e-6)
     
     # Training loss
-    total_train_loss = []
     total_start_time = int(time.time())
 
     ckpt_path = str(cfg['ckpt_path'])
@@ -101,8 +116,10 @@ def main(cfg):
                       cfg=cfg,
                       ckpt_path=ckpt_path)
 
-        total_train_loss.append(train_loss)
         # loss -> WandB
+        if args.use_wandb:
+            wandb.log({"train_loss": train_loss, "val_loss": val_loss}, step=current_epoch)
+
         save_ckpt(ckpt_name="last",
                   model=model,
                   current_epoch=current_epoch,
@@ -115,6 +132,9 @@ def main(cfg):
     total_elapsed_time = int(time.time()) - total_start_time
     print(f"<Total Train Time: {total_elapsed_time//60:02d}m {total_elapsed_time%60:02d}s>")
 
+    if args.use_wandb:
+        wandb.finish()
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Training', parents=[add_args_parser()])
     args = parser.parse_args()
@@ -122,4 +142,4 @@ if __name__ == '__main__':
     with open(f'configs/{args.config}.yaml') as f:
         cfg = yaml.full_load(f)
     
-    main(cfg)
+    main(cfg, args)
