@@ -6,36 +6,16 @@ from utils import train_one_epoch, save_model_ckpt, save_loss_ckpt
 import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
-import argparse, time, os, sys, yaml, logging
+import argparse, time, os, sys, yaml
 
 def add_args_parser():
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('--config', type=str)
 
     return parser
-
-def get_logger(expr_name):
-    logger = logging.getLogger('train')
-    logger.setLevel(logging.INFO)
-    
-    formatter = logging.Formatter(
-        "%(asctime)s | %(levelname)s | %(message)s"
-    )
-
-    file_h = logging.FileHandler(f"logs/{expr_name}.log", mode='w')
-    file_h.setLevel(logging.INFO)
-    file_h.setFormatter(formatter)
-    logger.addHandler(file_h)
-
-    console_h = logging.StreamHandler()
-    console_h.setLevel(logging.INFO)
-    logger.addHandler(console_h)
-
-    return logger
         
 def main(cfg):
-    logger = get_logger(cfg['expr'])
-    logger.info(f"=====================[{cfg['expr']}]=====================")
+    print(f"=====================[{cfg['expr']}]=====================")
 
     # Device Setting
     device = None
@@ -43,7 +23,7 @@ def main(cfg):
         device = cfg['device']
     else: 
         device = 'cpu'
-    logger.info(f"device: {device}")
+    print(f"device: {device}")
 
     # Hyperparameter Settings
     hp_cfg = cfg['hyperparameters']
@@ -55,11 +35,11 @@ def main(cfg):
                                            shuffle=True,
                                            batch_size=hp_cfg['batch_size'],
                                            drop_last=True)
-    logger.info(f"Load Dataset {data_cfg['dataset']}")
-            
+    print(f"Load Dataset {data_cfg['dataset']}")
+
     # Load Model
     model_cfg = cfg['model']
-    logger.info(model_cfg['name'])
+    print(model_cfg['name'])
     model = load_model(model_cfg).to(device)
     if cfg['parallel'] == True:
         model = nn.DataParallel(model)
@@ -93,24 +73,24 @@ def main(cfg):
     min_loss = 1e4
     
     for current_epoch in range(1, hp_cfg['epochs']+1):
-        logger.info("=======================================================")
-        logger.info(f"Epoch: [{current_epoch:03d}/{hp_cfg['epochs']:03d}]\n")
+        print("=======================================================")
+        print(f"Epoch: [{current_epoch:03d}/{hp_cfg['epochs']:03d}]\n")
         
         # Training One Epoch
         start_time = int(time.time())
-        train_loss = train_one_epoch(model, train_dl, loss_fn, optimizer, scheduler, device, logger)
+        train_loss = train_one_epoch(model, train_dl, loss_fn, optimizer, scheduler, device)
         elapsed_time = int(time.time() - start_time)
-        logger.info(f"Train Time: {elapsed_time//60:02d}m {elapsed_time%60:02d}s")
+        print(f"Train Time: {elapsed_time//60:02d}m {elapsed_time%60:02d}s")
 
         if train_loss < min_loss:
             min_loss = train_loss
-            save_model_ckpt(model, save_cfg['name'], current_epoch, save_cfg['weights_path'], logger)
+            save_model_ckpt(model, save_cfg['name'], current_epoch, save_cfg['weights_path'])
 
         total_train_loss.append(train_loss)
-        save_loss_ckpt(save_cfg['name'], total_train_loss, save_cfg['loss_path'], logger)
+        save_loss_ckpt(save_cfg['name'], total_train_loss, save_cfg['loss_path'])
 
     total_elapsed_time = int(time.time()) - total_start_time
-    logger.info(f"<Total Train Time: {total_elapsed_time//60:02d}m {total_elapsed_time%60:02d}s>")
+    print(f"<Total Train Time: {total_elapsed_time//60:02d}m {total_elapsed_time%60:02d}s>")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Training', parents=[add_args_parser()])

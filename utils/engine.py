@@ -5,7 +5,7 @@ import numpy as np
 
 from .metrics import get_metrics
 
-def train_one_epoch(model, dataloader, loss_fn, optimizer, scheduler, device, logger):
+def train_one_epoch(model, dataloader, loss_fn, optimizer, scheduler, device):
     model.train()
     total_loss = []
     
@@ -24,11 +24,11 @@ def train_one_epoch(model, dataloader, loss_fn, optimizer, scheduler, device, lo
         optimizer.step()
         
         # Only stream (not log, because logging don't support the carriage return.)
-        print(f"\rTraining: {100*batch_idx/len(dataloader):.2f}%, Loss: {sum(total_loss)/len(total_loss):.6f}, LR: {scheduler.get_last_lr()[0]:.6f}", end="")
+        # print(f"\rTraining: {100*batch_idx/len(dataloader):.2f}%, Loss: {sum(total_loss)/len(total_loss):.6f}, LR: {scheduler.get_last_lr()[0]:.6f}", end="")
     print()
     
     scheduler.step(sum(total_loss)/len(total_loss))
-    logger.info(f"Loss: {sum(total_loss)/len(total_loss):.6f}, LR: {scheduler.get_last_lr()[0]:.6f}")
+    print(f"Loss: {sum(total_loss)/len(total_loss):.6f}, LR: {scheduler.get_last_lr()[0]:.6f}")
     
     return sum(total_loss)/len(total_loss)
 

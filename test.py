@@ -1,7 +1,7 @@
 import torch
 
 import argparse
-import time, sys, os, yaml, logging
+import time, sys, os, yaml
 
 from utils import evaluate
 from models import load_model
@@ -13,28 +13,8 @@ def add_args_parser():
     
     return parser
 
-def get_logger(expr_name):
-    logger = logging.getLogger('test')
-    logger.setLevel(logging.INFO)
-    
-    formatter = logging.Formatter(
-        "%(asctime)s | %(levelname)s | %(message)s"
-    )
-
-    file_h = logging.FileHandler(f"logs/{expr_name}.log", mode='w')
-    file_h.setLevel(logging.INFO)
-    file_h.setFormatter(formatter)
-    logger.addHandler(file_h)
-
-    console_h = logging.StreamHandler()
-    console_h.setLevel(logging.INFO)
-    logger.addHandler(console_h)
-
-    return logger
-
 def main(cfg):
-    logger = get_logger(cfg['expr'])
-    logger.info(f"=====================[{cfg['expr']}]=====================")
+    print(f"=====================[{cfg['expr']}]=====================")
     
     # Device Setting
     device = None
@@ -42,7 +22,7 @@ def main(cfg):
         device = cfg['device']
     else: 
         device = 'cpu'
-    logger.info(f"device: {device}")
+    print(f"device: {device}")
     
     # Hyperparameter Settings
     hp_cfg = cfg['hyperparameters']
@@ -52,7 +32,7 @@ def main(cfg):
     test_ds = load_dataset(data_cfg)
     test_dl = torch.utils.data.DataLoader(test_ds,
                                           batch_size=hp_cfg['batch_size'])
-    logger.info(f"Load Dataset {data_cfg['dataset']}")
+    print(f"Load Dataset {data_cfg['dataset']}")
     
     # Load Model
     save_cfg = cfg['save']
@@ -65,10 +45,10 @@ def main(cfg):
     start_time = int(time.time())
     result = evaluate(model, test_dl, device)
     test_time = int(time.time() - start_time)
-    logger.info(f"Test Time: {test_time//60:02d}m {test_time%60:02d}s")
+    print(f"Test Time: {test_time//60:02d}m {test_time%60:02d}s")
     
     for key, value in result.items():
-        logger.info(f"{key}: {value:.4f}")
+        print(f"{key}: {value:.4f}")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Test', parents=[add_args_parser()])
