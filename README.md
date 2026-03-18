@@ -23,8 +23,9 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 # Conda (Simple setup (25.12.12))
-conda create -n project python=3.12
-conda activate project
+conda create -n template python=3.12
+conda activate template
+pip install -r requirements.txt
 ```
 # Train & Test
 ```
