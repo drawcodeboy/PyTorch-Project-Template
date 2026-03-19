@@ -2,7 +2,7 @@
 * This repository is a codebase template for projects using PyTorch.
 * It includes an example project that performs multi-class classification on the MNIST dataset using ConvNet and ConvNet2(with residual connections).
 
-# 🚀 Version 2.0.0 Notes
+# 🚀 Version 2.0.1 Notes
 - [x] Shell script-based execution
 - [x] Removed logger (redirected stdout/stderr to log directory)
 - [x] Added WandB logging
@@ -10,9 +10,11 @@
 - [x] Checkpoint-based saving (<code>.ckpt</code>)
 - [x] Save test results as JSON
 - [x] Added validation function (<code>engine/validate.py</code>)
+- [x] Resume training from intermediate checkpoints
+- [x] Subtasks execution
 
 ### ✅ Planned for future release
-- [ ] Resume training from intermediate checkpoints
+- Will return with updates if new ideas arise (Or submit a PR if you have ideas!)
 
 # 📂 Structure
 ```
@@ -39,7 +41,7 @@
 │   ├── train_convnet2_mnist_cls.sh
 │   └── train_convnet_mnist_cls.sh
 ├── subtasks
-│   ├── 01_model_params
+│   ├── 01
 │   └── README.md
 ├── test.py
 ├── train.py
@@ -59,11 +61,14 @@ pip install -r requirements.txt
 ```
 # 🔥 Execution
 ```bash
-# Train
+# Train (Check options wandb or resume)
 bash scripts/train_convnet_mnist_cls.sh
 bash scripts/train_convnet2_mnist_cls.sh
 
 # Test
 bash scripts/test_convnet_mnist_cls.sh
 bash scripts/test_convnet2_mnist_cls.sh
+
+# Subtask (Configure task via SUBTASK variable in shell script)
+bash scripts/subtask.sh
 ```
