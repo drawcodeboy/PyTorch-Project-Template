@@ -12,6 +12,7 @@ import wandb
 def add_args_parser():
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('--config', type=str)
+    parser.add_argument('--resume', action='store_true') # Resume from checkpoint last.ckpt
     parser.add_argument('--use_wandb', action='store_true')
 
     return parser
@@ -28,10 +29,20 @@ def load_wandb(cfg):
     wandb.define_metric("val_loss", step_metric="epoch")
 
 def main(cfg, args):
+    start_epoch = 1
+    if args.resume == True:
+        print("Resume Training")
+        ckpt_path = os.path.join(cfg['ckpt_path'], "last.ckpt")
+        ckpt = torch.load(ckpt_path, weights_only=False)
+        cfg = ckpt['cfg']
+        best_metric = ckpt['best_metric']
+        start_epoch = ckpt['epoch'] + 1
+        print(f"Load checkpoint from {ckpt_path}")
+
     # WandB Setting
     if args.use_wandb: 
         load_wandb(cfg)
-        
+
     # Device Setting
     device = None
     if cfg['device'] != 'cpu' and torch.cuda.is_available():
@@ -63,8 +74,13 @@ def main(cfg, args):
     model_cfg = cfg['model']
     print(model_cfg['name'])
     model = load_model(model_cfg).to(device)
+
     if cfg['parallel'] == True:
         model = nn.DataParallel(model)
+
+    if args.resume == True:
+        model.load_state_dict(ckpt['model'])
+        print(f"Load Model {model_cfg['name']} from checkpoint")
     
     # Loss Function
     if hp_cfg['loss_fn'] == 'cross-entropy':
@@ -85,15 +101,20 @@ def main(cfg, args):
                                                      factor=0.5,
                                                      patience=7,
                                                      min_lr=1e-6)
+
+    if args.resume == True:
+        optimizer.load_state_dict(ckpt['optimizer'])
+        scheduler.load_state_dict(ckpt['scheduler'])
+        print(f"Load Optimizer and Scheduler from checkpoint")
     
     # Training loss
     total_start_time = int(time.time())
 
     ckpt_path = str(cfg['ckpt_path'])
     
-    min_loss = 1e4
+    best_metric = 1e4
     
-    for current_epoch in range(1, hp_cfg['epochs']+1):
+    for current_epoch in range(start_epoch, hp_cfg['epochs']+1):
         print("=======================================================")
         print(f"Epoch: [{current_epoch:03d}/{hp_cfg['epochs']:03d}]\n")
         
@@ -106,25 +127,24 @@ def main(cfg, args):
         # Validation
         val_loss = validate(model, val_dl, loss_fn, device)
 
-        if val_loss < min_loss:
-            min_loss = val_loss
+        if val_loss < best_metric:
+            best_metric = val_loss
             save_ckpt(ckpt_name="best",
                       model=model,
                       current_epoch=current_epoch,
-                      best_metric=min_loss,
+                      best_metric=best_metric,
                       optimizer=optimizer,
                       scheduler=scheduler,
                       cfg=cfg,
                       ckpt_path=ckpt_path)
 
-        # loss -> WandB
         if args.use_wandb:
             wandb.log({"epoch": current_epoch, "train_loss": train_loss, "val_loss": val_loss})
 
         save_ckpt(ckpt_name="last",
                   model=model,
                   current_epoch=current_epoch,
-                  best_metric=min_loss,
+                  best_metric=best_metric,
                   optimizer=optimizer,
                   scheduler=scheduler,
                   cfg=cfg,
