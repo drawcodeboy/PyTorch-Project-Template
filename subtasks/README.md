@@ -1,10 +1,8 @@
 # Subtasks
 * The scripts below are examples.
 
-### 01_model_params
+### 01
 ```
-python subtasks/01_model_params/exec.py
+python subtasks/01/exec.py
 ```
 * print model's number of parameters.
-
-### ~~~~
