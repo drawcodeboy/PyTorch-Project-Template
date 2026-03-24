@@ -75,9 +75,6 @@ def main(cfg, args):
     print(model_cfg['name'])
     model = load_model(model_cfg).to(device)
 
-    if cfg['parallel'] == True:
-        model = nn.DataParallel(model)
-
     if args.resume == True:
         model.load_state_dict(ckpt['model'])
         print(f"Load Model {model_cfg['name']} from checkpoint")

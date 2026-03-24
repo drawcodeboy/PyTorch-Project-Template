@@ -14,7 +14,7 @@
 - [x] Subtasks execution
 
 ### ✅ Planned for future release
-- Will return with updates if new ideas arise (Or submit a PR if you have ideas!)
+- [ ] <code>DistributedDataParallel</code> training
 
 # 📂 Structure
 ```
