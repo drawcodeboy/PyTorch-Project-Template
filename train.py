@@ -159,7 +159,7 @@ def main(cfg, args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Training', parents=[add_args_parser()])
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
 
     with open(f'configs/{args.config}.yaml') as f:
         cfg = yaml.full_load(f)

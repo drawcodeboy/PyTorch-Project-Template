@@ -71,6 +71,6 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Test', parents=[add_args_parser()])
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
 
     main(args)
