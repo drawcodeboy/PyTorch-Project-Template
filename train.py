@@ -1,7 +1,7 @@
 from datasets import load_dataset
 from models import load_model
 
-from utils import train_one_epoch, validate, save_ckpt
+from utils import train_one_epoch, validate, save_ckpt, init_distributed_mode
 
 import torch
 from torch import nn, optim
@@ -14,6 +14,7 @@ def add_args_parser():
     parser.add_argument('--config', type=str)
     parser.add_argument('--resume', action='store_true') # Resume from checkpoint last.ckpt
     parser.add_argument('--use_wandb', action='store_true')
+    parser.add_argument('--distributed', action='store_true')
 
     return parser
 
@@ -29,6 +30,9 @@ def load_wandb(cfg):
     wandb.define_metric("val_loss", step_metric="epoch")
 
 def main(cfg, args):
+    if args.distributed:
+        init_distributed_mode()
+
     start_epoch = 1
     if args.resume == True:
         print("Resume Training")
