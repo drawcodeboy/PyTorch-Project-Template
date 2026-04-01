@@ -1,6 +1,5 @@
 expr_name: convnet_mnist_cls
 device: cuda:0
-parallel: False
 
 data:
   train:

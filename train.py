@@ -1,7 +1,7 @@
 from datasets import load_dataset
 from models import load_model
 
-from utils import train_one_epoch, validate, save_ckpt
+from utils import train_one_epoch, validate, save_ckpt, init_distributed_mode
 
 import torch
 from torch import nn, optim
@@ -14,6 +14,7 @@ def add_args_parser():
     parser.add_argument('--config', type=str)
     parser.add_argument('--resume', action='store_true') # Resume from checkpoint last.ckpt
     parser.add_argument('--use_wandb', action='store_true')
+    parser.add_argument('--distributed', action='store_true')
 
     return parser
 
@@ -29,6 +30,9 @@ def load_wandb(cfg):
     wandb.define_metric("val_loss", step_metric="epoch")
 
 def main(cfg, args):
+    if args.distributed:
+        init_distributed_mode()
+
     start_epoch = 1
     if args.resume == True:
         print("Resume Training")
@@ -76,9 +80,6 @@ def main(cfg, args):
     model_cfg = cfg['model']
     print(model_cfg['name'])
     model = load_model(model_cfg).to(device)
-
-    if cfg['parallel'] == True:
-        model = nn.DataParallel(model)
 
     if args.resume == True:
         model.load_state_dict(ckpt['model'])
@@ -160,7 +161,7 @@ def main(cfg, args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Training', parents=[add_args_parser()])
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
 
     with open(f'configs/{args.config}.yaml') as f:
         cfg = yaml.full_load(f)
