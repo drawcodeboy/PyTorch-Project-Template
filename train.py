@@ -87,7 +87,7 @@ def main(cfg, args):
     if hp_cfg['loss_fn'] == 'cross-entropy':
         loss_fn = nn.CrossEntropyLoss()
     else:
-        raise Exception(f"Check loss function in configuration file (main branch test)")
+        raise Exception(f"Check loss function in configuration file (ddp branch test)")
     
     # Optimizer
     optimizer = None
