@@ -70,6 +70,8 @@ def main(cfg, args):
     print(f"Load Train dataset {data_cfg['train']['dataset']}")
     print(f"Load Validation dataset {data_cfg['val']['dataset']}")
 
+    # two different branches / Git fetch test
+
     # Load Model
     model_cfg = cfg['model']
     print(model_cfg['name'])
