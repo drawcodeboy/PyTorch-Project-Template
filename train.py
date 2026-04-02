@@ -6,6 +6,8 @@ from utils import train_one_epoch, validate, save_ckpt, init_distributed_mode
 import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
+import numpy as np
+import random
 import argparse, time, os, sys, yaml
 import wandb
 
@@ -14,7 +16,11 @@ def add_args_parser():
     parser.add_argument('--config', type=str)
     parser.add_argument('--resume', action='store_true') # Resume from checkpoint last.ckpt
     parser.add_argument('--use_wandb', action='store_true')
+    
+    # Distributed Training
     parser.add_argument('--distributed', action='store_true')
+    parser.add_argument('--backend', type=str, default='nccl')
+    parser.add_argument('--init_method', type=str, default='env://')
 
     return parser
 
@@ -29,9 +35,19 @@ def load_wandb(cfg):
     wandb.define_metric("train_loss", step_metric="epoch")
     wandb.define_metric("val_loss", step_metric="epoch")
 
+def set_seed(seed, rank=0):
+    seed = seed + rank
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
 def main(cfg, args):
+    WORLD_SIZE, LOCAL_RANK, RANK = None, None, None
     if args.distributed:
-        init_distributed_mode()
+        WORLD_SIZE, LOCAL_RANK, RANK = init_distributed_mode(args)
+
+    USE_WANDB = ((args.distributed==True and RANK == 0) and args.use_wandb) or (args.distributed==False and args.use_wandb)
 
     start_epoch = 1
     if args.resume == True:
@@ -44,35 +60,55 @@ def main(cfg, args):
         print(f"Load checkpoint from {ckpt_path}")
 
     # WandB Setting
-    if args.use_wandb: 
+    if USE_WANDB:
+        # Only master process (RANK 0) will log to WandB in distributed training
+        # Or, if not distributed, log to WandB as usual
         load_wandb(cfg)
-
+    
     # Device Setting
     device = None
-    if cfg['device'] != 'cpu' and torch.cuda.is_available():
-        device = cfg['device']
-    else: 
-        device = 'cpu'
+    if cfg['device'] == 'cuda' and torch.cuda.is_available():
+        if args.distributed:
+            torch.cuda.set_device(LOCAL_RANK)
+        device = torch.device("cuda")
+    else:
+        device = torch.device("cpu")
     print(f"device: {device}")
+
+    # Seed Setting
+    set_seed(cfg['seed'], RANK if args.distributed else 0)
 
     # Hyperparameter Settings
     hp_cfg = cfg['hyperparameters']
 
     # Load Dataset
     data_cfg = cfg['data']
+
     train_ds = load_dataset(data_cfg['train'])
+    val_ds = load_dataset(data_cfg['val'])
+
+    if args.distributed:
+        train_sampler = torch.utils.data.DistributedSampler(
+            train_ds, num_replicas=WORLD_SIZE, rank=RANK, shuffle=True, drop_last=True)
+        val_sampler = torch.utils.data.DistributedSampler(
+            val_ds, num_replicas=WORLD_SIZE, rank=RANK, shuffle=False, drop_last=False)
+    else:
+        train_sampler, val_sampler = None, None
+
     train_dl = torch.utils.data.DataLoader(train_ds,
-                                           shuffle=True,
+                                           shuffle=(train_sampler is None),
+                                           sampler=train_sampler,
                                            batch_size=hp_cfg['batch_size'],
                                            drop_last=True)
 
-    val_ds = load_dataset(data_cfg['val'])
     val_dl = torch.utils.data.DataLoader(val_ds,
-                                         shuffle=False,
+                                         sampler=val_sampler,
                                          batch_size=hp_cfg['batch_size'],
                                          drop_last=False)
+
     print(f"Load Train dataset {data_cfg['train']['dataset']}")
     print(f"Load Validation dataset {data_cfg['val']['dataset']}")
+    print(f"Effective Batch Size: {hp_cfg['batch_size'] * (WORLD_SIZE if args.distributed else 1)}  (per GPU Batch Size: {hp_cfg['batch_size']})")
 
     # Load Model
     model_cfg = cfg['model']
@@ -82,6 +118,11 @@ def main(cfg, args):
     if args.resume == True:
         model.load_state_dict(ckpt['model'])
         print(f"Load Model {model_cfg['name']} from checkpoint")
+
+    if args.distributed and device == torch.device("cuda"):
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[LOCAL_RANK])
+    elif args.distributed and device == torch.device("cpu"):
+        model = torch.nn.parallel.DistributedDataParallel(model)
     
     # Loss Function
     if hp_cfg['loss_fn'] == 'cross-entropy':
@@ -118,6 +159,9 @@ def main(cfg, args):
     for current_epoch in range(start_epoch, hp_cfg['epochs']+1):
         print("=======================================================")
         print(f"Epoch: [{current_epoch:03d}/{hp_cfg['epochs']:03d}]\n")
+
+        if args.distributed:
+            train_sampler.set_epoch(current_epoch)
         
         # Training One Epoch
         start_time = int(time.time())
@@ -128,10 +172,10 @@ def main(cfg, args):
         # Validation
         val_loss = validate(model, val_dl, loss_fn, device)
 
-        if val_loss < best_metric:
+        if (val_loss < best_metric) and (RANK == 0 if args.distributed else True):
             best_metric = val_loss
             save_ckpt(ckpt_name="best",
-                      model=model,
+                      model=model.module if args.distributed else model,
                       current_epoch=current_epoch,
                       best_metric=best_metric,
                       optimizer=optimizer,
@@ -139,23 +183,31 @@ def main(cfg, args):
                       cfg=cfg,
                       ckpt_path=ckpt_path)
 
-        if args.use_wandb:
-            wandb.log({"epoch": current_epoch, "train_loss": train_loss, "val_loss": val_loss})
+        if USE_WANDB:
+            # Only master process (RANK 0) will log to WandB in distributed training
+            # Or, if not distributed, log to WandB as usual
+            wandb.log({"epoch": current_epoch, 
+                       "train_loss": train_loss, 
+                       "val_loss": val_loss})
 
-        save_ckpt(ckpt_name="last",
-                  model=model,
-                  current_epoch=current_epoch,
-                  best_metric=best_metric,
-                  optimizer=optimizer,
-                  scheduler=scheduler,
-                  cfg=cfg,
-                  ckpt_path=ckpt_path)
+        if RANK == 0 if args.distributed else True:
+            save_ckpt(ckpt_name="last",
+                    model=model.module if args.distributed else model,
+                    current_epoch=current_epoch,
+                    best_metric=best_metric,
+                    optimizer=optimizer,
+                    scheduler=scheduler,
+                    cfg=cfg,
+                    ckpt_path=ckpt_path)
 
     total_elapsed_time = int(time.time()) - total_start_time
     print(f"<Total Train Time: {total_elapsed_time//60:02d}m {total_elapsed_time%60:02d}s>")
 
-    if args.use_wandb:
+    if USE_WANDB:
         wandb.finish()
+
+    if args.distributed:
+        torch.distributed.destroy_process_group()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Training', parents=[add_args_parser()])

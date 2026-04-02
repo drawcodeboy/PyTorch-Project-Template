@@ -20,4 +20,4 @@ exec 2> "$ERR"
 #   --resume (load last.ckpt)
 
 export PYTHON_UNBUFFERED=1
-python -u train.py --config=convnet_mnist_cls --resume
+python -u train.py --config=convnet_mnist_cls
