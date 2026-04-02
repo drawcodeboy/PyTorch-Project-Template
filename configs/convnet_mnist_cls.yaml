@@ -1,5 +1,6 @@
 expr_name: convnet_mnist_cls
-device: cuda:0
+device: cuda
+seed: 42
 
 data:
   train:
