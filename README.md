@@ -68,6 +68,10 @@ pip install -r requirements.txt
 bash scripts/train_convnet_mnist_cls.sh
 bash scripts/train_convnet2_mnist_cls.sh
 
+# Train with DDP (Check options wandb or resume)
+# Set DDP-related arguments
+bash scripts/train_convnet_mnist_cls_ddp.sh
+
 # Test
 bash scripts/test_convnet_mnist_cls.sh
 bash scripts/test_convnet2_mnist_cls.sh
