@@ -19,13 +19,19 @@ def setup_for_distributed(is_master):
 
     builtins.print = print
 
-def init_distributed_mode(args):
+def init_distributed_mode(args, cfg):
     RANK = int(os.environ["RANK"])
     WORLD_SIZE = int(os.environ["WORLD_SIZE"])
     LOCAL_RANK = int(os.environ["LOCAL_RANK"])
     
-    torch.distributed.init_process_group(backend=args.backend, init_method=args.init_method,
-                                         world_size=WORLD_SIZE, rank=RANK)
+    if cfg['device'] == 'cuda' and torch.cuda.is_available():
+        torch.cuda.set_device(LOCAL_RANK)
+        torch.distributed.init_process_group(backend="nccl", init_method=args.init_method,
+                                             world_size=WORLD_SIZE, rank=RANK, device_id=LOCAL_RANK)
+    else:
+        torch.distributed.init_process_group(backend="gloo", init_method=args.init_method,
+                                             world_size=WORLD_SIZE, rank=RANK)
+    
     torch.distributed.barrier()
     setup_for_distributed(RANK == 0)
 

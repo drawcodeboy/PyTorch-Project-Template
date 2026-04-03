@@ -19,7 +19,6 @@ def add_args_parser():
     
     # Distributed Training
     parser.add_argument('--distributed', action='store_true')
-    parser.add_argument('--backend', type=str, default='nccl')
     parser.add_argument('--init_method', type=str, default='env://')
 
     return parser
@@ -45,7 +44,7 @@ def set_seed(seed, rank=0):
 def main(cfg, args):
     WORLD_SIZE, LOCAL_RANK, RANK = None, None, None
     if args.distributed:
-        WORLD_SIZE, LOCAL_RANK, RANK = init_distributed_mode(args)
+        WORLD_SIZE, LOCAL_RANK, RANK = init_distributed_mode(args, cfg)
 
     USE_WANDB = ((args.distributed==True and RANK == 0) and args.use_wandb) or (args.distributed==False and args.use_wandb)
 
@@ -68,8 +67,6 @@ def main(cfg, args):
     # Device Setting
     device = None
     if cfg['device'] == 'cuda' and torch.cuda.is_available():
-        if args.distributed:
-            torch.cuda.set_device(LOCAL_RANK)
         device = torch.device("cuda")
     else:
         device = torch.device("cpu")

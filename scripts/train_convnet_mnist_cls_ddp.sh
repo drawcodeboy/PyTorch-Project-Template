@@ -24,9 +24,6 @@ exec 2> "$ERR"
 #   torchrun --nnodes=1 --nproc_per_node=2 train.py
 
 #   --distributed (enable distributed training)
-#   --backend (distributed backend, e.g., gloo, nccl; default: nccl)
-#       if you use CPU, use gloo. If you use GPU, use nccl for better performance.
-#       So, please check config.yaml for the backend setting.
 #   --init_method (initialization method for distributed training, default: env://)
 #       For single-node multi-process training, env:// is sufficient.
 #       For multi-node training, you may need to specify a shared file system or use TCP initialization.
