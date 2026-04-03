@@ -25,6 +25,9 @@ def init_distributed_mode(args, cfg):
     LOCAL_RANK = int(os.environ["LOCAL_RANK"])
     
     if cfg['device'] == 'cuda' and torch.cuda.is_available():
+        # Even if you set cuda.set_device(LOCAL_RANK), you need to explicitly specify the device_id
+        # in init_process_group to ensure that each process uses the correct GPU. 
+        # Otherwise, all processes might try to use the default GPU (0) by default.
         torch.cuda.set_device(LOCAL_RANK)
         torch.distributed.init_process_group(backend="nccl", init_method=args.init_method,
                                              world_size=WORLD_SIZE, rank=RANK, device_id=LOCAL_RANK)
